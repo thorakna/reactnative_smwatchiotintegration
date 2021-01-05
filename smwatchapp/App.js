@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
-import {StyleSheet, View, Text, StatusBar, Animated, Easing, TouchableOpacity, ScrollView, PermissionsAndroid} from 'react-native';
-
+import {StyleSheet, View, Text, StatusBar, Animated, Easing, TouchableOpacity, ScrollView, PermissionsAndroid, Image, BackHandler} from 'react-native';
+import Wol from 'react-native-wol';
 import contentShower from './src/components/contentShower';
 
 const App: () => React$Node = () => {
@@ -12,8 +12,12 @@ const App: () => React$Node = () => {
 
   const [isWelcome, setWelcome] = useState(true);
   const [isConnected, setConnected] = useState(false);
+  const [isChooser, setChooser] = useState(true);
+  const [isPage, setPage] = useState(false);
   const [rolebir, setRolebir] = useState(false);
   const [roleiki, setRoleiki] = useState(false);
+
+  const [wolwait, setWolwait] = useState('#3a86fa');
 
   const getir = () => {
     Animated.timing(animt, {
@@ -42,6 +46,39 @@ const App: () => React$Node = () => {
     }).start();
   }
 
+  const geriAl = () =>{
+    let prom = new Promise ((resolve, reject) => {
+      Animated.timing(animt, {
+        toValue: 0,
+        delay: 800,
+        duration: 500,
+        useNativeDriver: true
+      }).start(()=>{
+        getir();
+        resolve(true);
+      });
+      Animated.timing(animt2, {
+        toValue: 0,
+        delay: 500,
+        duration: 600,
+        useNativeDriver: true
+      }).start();
+      Animated.timing(animt3, {
+        toValue: 0,
+        delay: 200,
+        duration: 1000,
+        easing: Easing.elastic(),
+        useNativeDriver: true
+      }).start();
+      Animated.timing(animle, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: true
+      }).start();
+    });
+    return prom;
+  }
+
   useEffect(()=>{
     getir();
     Animated.loop(
@@ -58,40 +95,22 @@ const App: () => React$Node = () => {
         })
       ]),
     ).start();
-  });
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      ()=>{
+        if(isChooser){
+          BackHandler.exitApp();
+        }else{
+          geriAl().then(()=>{
+            setChooser(true);
+          });
+        }
+        return true;
+      }
+    );
 
-  const geriAl = () =>{
-    Animated.timing(animt, {
-      toValue: 0,
-      delay: 800,
-      duration: 500,
-      useNativeDriver: true
-    }).start(()=>{
-      setWelcome(false);
-      getir();
-      setTimeout(()=>{
-        setConnected(true);
-      }, 2000);
-    });
-    Animated.timing(animt2, {
-      toValue: 0,
-      delay: 500,
-      duration: 600,
-      useNativeDriver: true
-    }).start();
-    Animated.timing(animt3, {
-      toValue: 0,
-      delay: 200,
-      duration: 1000,
-      easing: Easing.elastic(),
-      useNativeDriver: true
-    }).start();
-    Animated.timing(animle, {
-      toValue: 0,
-      duration: 500,
-      useNativeDriver: true
-    }).start();
-  }
+    return () => backHandler.remove();
+  });
 
 
 
@@ -108,32 +127,82 @@ const App: () => React$Node = () => {
               <Text style={[styles.shadowlutext, {fontSize:30}]}>Onur YAŞAR</Text>
               <Text style={[styles.shadowlutext, {fontSize:12, marginBottom: 15}]}>Smartwatch IOT Integration App</Text>
               <TouchableOpacity onPress={()=>{
-                geriAl();
+                geriAl().then(()=>{
+                  setWelcome(false);
+                });
               }} style={{borderRadius: 10, paddingHorizontal: 40, paddingVertical:15, backgroundColor:'black'}}>
                 <Text style={styles.shadowlutext}>Start</Text>
               </TouchableOpacity>
             </View>
           :
-            isConnected ? 
+            isChooser ? 
+            <View style={[styles.content, {flexDirection:'row'}]}>
+              <TouchableOpacity onPress={()=>{
+                geriAl().then(()=>{
+                  setChooser(false);
+                  setPage('room');
+                  setTimeout(()=>{
+                    setConnected(true);
+                  }, 4000);
+                });
+              }} style={{borderRadius: 10, paddingHorizontal: 10, paddingVertical:5, marginEnd: 20, backgroundColor:'#3a86fa'}}>
+                <Image style={styles.roleimage} source={require('./src/images/room.png')} />
+                <Text style={[styles.shadowlutext, {fontSize:15, textAlign:'center'}]}>Room</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={()=>{
+                geriAl().then(()=>{
+                  setChooser(false);
+                  setPage('computer');
+                });
+              }} style={{borderRadius: 10, paddingHorizontal: 10, paddingVertical:5, backgroundColor:'#3a86fa'}}>
+                <Image style={styles.roleimage} source={require('./src/images/computer.png')} />
+                <Text style={[styles.shadowlutext, {fontSize:15, textAlign:'center'}]}>Computer</Text>
+              </TouchableOpacity>
+            </View>
+            :
+            isPage == 'computer' ? 
             <View style={styles.content}>
+              <Text style={[styles.shadowlutext, {fontSize:20, marginBottom: 15}]}>Computer Control</Text>
+              <View style={{flexDirection:'row'}}>
               <TouchableOpacity onPress={()=>{
-                if(rolebir){
-                  setRolebir(false);
-                }else{
-                  setRolebir(true);
-                }
-              }} style={{borderRadius: 10, paddingHorizontal: 40, paddingVertical:15, marginBottom:20, backgroundColor:rolebir ? 'red' : 'green'}}>
-                <Text style={styles.shadowlutext}>{rolebir ? 'Röle 1 Kapa' : 'Röle 1 Aç'}</Text>
+                Wol.send("192.168.0.100", "D8:50:E6:4E:55:34", (res, msg) => {
+                  if(res){
+                    setWolwait('#009944');
+                    
+                  }else{
+                    setWolwait('#cf000f');
+                  }
+                  setTimeout(()=>{setWolwait('#3a86fa')}, 1000);
+                });
+              }} style={{borderRadius: 120, paddingHorizontal: 10, paddingVertical:5, backgroundColor:wolwait}}>
+                <Image style={styles.roleimage} source={require('./src/images/power.png')} />
               </TouchableOpacity>
-              <TouchableOpacity onPress={()=>{
-                if(roleiki){
-                  setRoleiki(false);
-                }else{
-                  setRoleiki(true);
-                }
-              }} style={{borderRadius: 10, paddingHorizontal: 40, paddingVertical:15, backgroundColor:roleiki ? 'red' : 'green'}}>
-                <Text style={styles.shadowlutext}>{roleiki ? 'Röle 2 Kapa' : 'Röle 2 Aç'}</Text>
-              </TouchableOpacity>
+              </View>
+            </View>
+            :
+            isPage == 'room' && isConnected ? 
+            <View style={styles.content}>
+              <Text style={[styles.shadowlutext, {fontSize:20, marginBottom: 15}]}>Room Control</Text>
+              <View style={{flexDirection:'row'}}>
+                <TouchableOpacity onPress={()=>{
+                  if(rolebir){
+                    setRolebir(false);
+                  }else{
+                    setRolebir(true);
+                  }
+                }} style={{borderRadius: 10, paddingHorizontal: 10, paddingVertical:5, marginEnd: 20, backgroundColor:'#3a86fa'}}>
+                  <Image style={styles.roleimage} source={rolebir ? require('./src/images/bulbon.png') : require('./src/images/bulboff.png')} />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={()=>{
+                  if(roleiki){
+                    setRoleiki(false);
+                  }else{
+                    setRoleiki(true);
+                  }
+                }} style={{borderRadius: 10, paddingHorizontal: 10, paddingVertical:5, backgroundColor:'#3a86fa'}}>
+                  <Image style={styles.roleimage} source={roleiki ? require('./src/images/ledon.png') : require('./src/images/ledoff.png')} />
+                </TouchableOpacity>
+              </View>
             </View>
             :
             <View style={styles.content}>
@@ -177,6 +246,11 @@ const styles = StyleSheet.create({
     textShadowOffset:{width: 2, height: 2}
   },
   bleimage:{
+    width:100,
+    height:100,
+    resizeMode:'contain'
+  },
+  roleimage:{
     width:100,
     height:100,
     resizeMode:'contain'
