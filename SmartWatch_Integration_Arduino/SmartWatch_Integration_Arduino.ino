@@ -9,8 +9,6 @@ int role2 = 12;
 
 int role1acik = 1;
 int role2acik = 1;
-int role1sellektor = 0;
-int role2sellektor = 0;
 
 void setup() 
 { 
@@ -24,18 +22,6 @@ void setup()
 void komut(String gelenkrktr){
   if(gelenkrktr.indexOf("ses") > -1){
         BT.print("ses");
-      }else if(gelenkrktr.indexOf("rbirsac") > -1){
-        BT.print("Role1sellektoracik");
-        role1sellektor = 1;
-      }else if(gelenkrktr.indexOf("rbirskapa") > -1){
-        BT.print("Role1sellektorkapali");
-        role1sellektor = 0;
-      }else if(gelenkrktr.indexOf("rikisac") > -1){
-        BT.print("Role2sellektoracik");
-        role2sellektor = 1;
-      }else if(gelenkrktr.indexOf("rikiskapa") > -1){
-        BT.print("Role2sellektorkapali");
-        role2sellektor = 0;
       }else if(gelenkrktr.indexOf("rbir") > -1){
         if(role1acik == 0){
           digitalWrite(role1, LOW);
@@ -72,22 +58,5 @@ void loop()
     gelenkrktr = Serial.readString();
     Serial.print("Serial Komut: "+gelenkrktr);
     komut(gelenkrktr);
-  }
-  
-  if(role1sellektor == 1){
-      digitalWrite(role1, LOW);
-      delay(20);
-      digitalWrite(role1, HIGH);
-      delay(100);
-      digitalWrite(role1, LOW);
-      delay(100);
-  }
-  if(role2sellektor == 1){
-      digitalWrite(role2, LOW);
-      delay(20);
-      digitalWrite(role2, HIGH);
-      delay(100);
-      digitalWrite(role2, LOW);
-      delay(100);
   }
 }
