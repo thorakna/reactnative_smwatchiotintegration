@@ -21,12 +21,8 @@ void setup()
   pinMode(role1, OUTPUT);
   pinMode(role2, OUTPUT);
 }
-void loop()
-{
-  if(BT.available()){
-    gelenkrktr = BT.readString();
-    Serial.print("\nBT Komut: "+gelenkrktr);
-      if(gelenkrktr.indexOf("ses") > -1){
+void komut(String gelenkrktr){
+  if(gelenkrktr.indexOf("ses") > -1){
         BT.print("ses");
       }else if(gelenkrktr.indexOf("rbirsac") > -1){
         BT.print("Role1sellektoracik");
@@ -63,10 +59,19 @@ void loop()
       }else{
         BT.print(gelenkrktr + " komutu yok!");
       }
+}
+void loop()
+{
+  if(BT.available()){
+    gelenkrktr = BT.readString();
+    Serial.print("BT Komut: "+gelenkrktr);
+    komut(gelenkrktr);
   }
 
   if(Serial.available()){
-    BT.print(Serial.readString());
+    gelenkrktr = Serial.readString();
+    Serial.print("Serial Komut: "+gelenkrktr);
+    komut(gelenkrktr);
   }
   
   if(role1sellektor == 1){
