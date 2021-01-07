@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import {StyleSheet, View, Text, StatusBar, Animated, Easing, TouchableOpacity, ScrollView, PermissionsAndroid, Image, BackHandler} from 'react-native';
 import Wol from 'react-native-wol';
+import RNBluetoothClassic, { BluetoothEventType, BluetoothDevice } from 'react-native-bluetooth-classic';
 import contentShower from './src/components/contentShower';
 
 const App: () => React$Node = () => {
@@ -34,13 +35,13 @@ const App: () => React$Node = () => {
     Animated.timing(animt3, {
       toValue: 1,
       delay: 500,
-      duration: 1000,
+      duration: 700,
       easing: Easing.elastic(),
       useNativeDriver: true
     }).start();
     Animated.timing(animle, {
       toValue: 1,
-      delay: 1500,
+      delay: 1200,
       duration: 500,
       useNativeDriver: true
     }).start();
@@ -50,7 +51,7 @@ const App: () => React$Node = () => {
     let prom = new Promise ((resolve, reject) => {
       Animated.timing(animt, {
         toValue: 0,
-        delay: 800,
+        delay: 400,
         duration: 500,
         useNativeDriver: true
       }).start(()=>{
@@ -59,24 +60,79 @@ const App: () => React$Node = () => {
       });
       Animated.timing(animt2, {
         toValue: 0,
-        delay: 500,
-        duration: 600,
+        delay: 200,
+        duration: 500,
         useNativeDriver: true
       }).start();
       Animated.timing(animt3, {
         toValue: 0,
-        delay: 200,
-        duration: 1000,
+        delay:200,
+        duration: 500,
         easing: Easing.elastic(),
         useNativeDriver: true
       }).start();
       Animated.timing(animle, {
         toValue: 0,
-        duration: 500,
+        duration: 200,
         useNativeDriver: true
       }).start();
     });
     return prom;
+  }
+
+  const sendCommand = async (komut) => {
+    try {
+      var command = await RNBluetoothClassic.writeToDevice('00:20:10:08:E3:02', komut);
+      if(command){
+        console.log(komut+' komutu yollandı!');
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  const connect = async (device) => {
+    try {
+      let connection = await device.isConnected();
+      if (!connection) {
+        let connectionOptions = {
+          CONNECTOR_TYPE: 'rfcomm',
+          SECURE_SOCKET: false,
+          DELIMITER: '\n'
+        };
+        connection = await device.connect(connectionOptions);
+        console.log(connection ? 'Connected!' : 'Cant be connected!');
+        device.onDataReceived((data) => {
+          console.log(data);
+        });
+        sendCommand('ses');
+      }
+      setConnected(connection);
+    } catch (error) {
+      // Handle error accordingly
+      console.log(error);
+      setConnected(false);
+    }
+  }
+
+  const roomBul = async () => {
+    var enabled = await RNBluetoothClassic.isBluetoothEnabled();
+    if(enabled){
+      try {
+        var devices = await RNBluetoothClassic.getBondedDevices();
+        for(i in devices){
+          var device = devices[i];
+          if(device.bonded && device.name == 'HC-06'){
+            console.log('HC-06 Device Id: '+device.id);
+            await connect(device);
+          }
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    }else{
+      RNBluetoothClassic.requestBluetoothEnabled().then(()=> roomBul);
+    }
   }
 
   useEffect(()=>{
@@ -109,7 +165,9 @@ const App: () => React$Node = () => {
       }
     );
 
-    return () => backHandler.remove();
+    return () => {
+      backHandler.remove();
+    }
   });
 
 
@@ -141,9 +199,7 @@ const App: () => React$Node = () => {
                 geriAl().then(()=>{
                   setChooser(false);
                   setPage('room');
-                  setTimeout(()=>{
-                    setConnected(true);
-                  }, 4000);
+                  roomBul();
                 });
               }} style={{borderRadius: 10, paddingHorizontal: 10, paddingVertical:5, marginEnd: 20, backgroundColor:'#3a86fa'}}>
                 <Image style={styles.roleimage} source={require('./src/images/room.png')} />
@@ -185,6 +241,7 @@ const App: () => React$Node = () => {
               <Text style={[styles.shadowlutext, {fontSize:20, marginBottom: 15}]}>Room Control</Text>
               <View style={{flexDirection:'row'}}>
                 <TouchableOpacity onPress={()=>{
+                  sendCommand('rbir');
                   if(rolebir){
                     setRolebir(false);
                   }else{
@@ -194,6 +251,7 @@ const App: () => React$Node = () => {
                   <Image style={styles.roleimage} source={rolebir ? require('./src/images/bulbon.png') : require('./src/images/bulboff.png')} />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={()=>{
+                  sendCommand('riki');
                   if(roleiki){
                     setRoleiki(false);
                   }else{
