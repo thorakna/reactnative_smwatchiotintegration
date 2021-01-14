@@ -18,27 +18,29 @@ void setup()
   digitalWrite(10, HIGH);
   pinMode(role1, OUTPUT);
   pinMode(role2, OUTPUT);
+  digitalWrite(role1, HIGH);
+  digitalWrite(role2, HIGH);
 }
 void komut(String gelenkrktr){
   if(gelenkrktr.indexOf("ses") > -1){
         BT.print("ses");
       }else if(gelenkrktr.indexOf("rbir") > -1){
         if(role1acik == 0){
-          digitalWrite(role1, HIGH);
+          digitalWrite(role1, LOW);
           BT.print("r1acildi");
           role1acik = 1;
         }else{
-          digitalWrite(role1, LOW);
+          digitalWrite(role1, HIGH);
           BT.print("r1kapandi");
           role1acik = 0;
         }
       }else if(gelenkrktr.indexOf("riki") > -1){
         if(role2acik == 0){
-          digitalWrite(role2, HIGH);
+          digitalWrite(role2, LOW);
           BT.print("r2acildi");
           role2acik = 1;
         }else{
-          digitalWrite(role2, LOW);
+          digitalWrite(role2, HIGH);
           BT.print("r2kapandi");
           role2acik = 0;
         }
